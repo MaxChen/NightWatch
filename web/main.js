@@ -289,5 +289,47 @@ function makeInfoBox(controlDiv, map) {
     controlUI.appendChild(controlText)
 }
 
-
 // google map key: AIzaSyDqIKzgQx_yMB-fvxh4-_2YNRrXVDRUlyY
+
+
+var Video = Twilio.Video;
+Video.connect('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzY2NzdiMmVkYWU1Yjk0M2NlMTk3ZTllNWI1NWVlZDJhLTE1MDE5NzYxMTMiLCJpc3MiOiJTSzY2NzdiMmVkYWU1Yjk0M2NlMTk3ZTllNWI1NWVlZDJhIiwic3ViIjoiQUNmZDFjNTZjODkxZjA4ODM1YWUwYTE3YmIxOWI0ZDkxNCIsImV4cCI6MTUwMTk3OTcxMywiZ3JhbnRzIjp7ImlkZW50aXR5IjoiQ29wIiwidmlkZW8iOnt9fX0.bWKdn_vELZEQOgTQ3Pia0c4GOIcUHCd9Q2Qayg5ibXs',
+              { name: 'NightWatch' }).then(room => {
+  console.log('Connected to Room "%s"', room.name);
+
+  room.participants.forEach(participantConnected);
+  room.on('participantConnected', participantConnected);
+
+  room.on('participantDisconnected', participantDisconnected);
+  room.once('disconnected', error => room.participants.forEach(participantDisconnected));
+});
+
+function participantConnected(participant) {
+  console.log('Participant "%s" connected', participant.identity);
+
+  const div = document.getElementById('remote-media');
+  div.className = "remote"
+  div.id = participant.sid;
+  div.innerText = participant.identity;
+
+  participant.on('trackAdded', track => trackAdded(div, track));
+  participant.tracks.forEach(track => trackAdded(div, track));
+  participant.on('trackRemoved', trackRemoved);
+
+  document.body.appendChild(div);
+}
+
+function participantDisconnected(participant) {
+  console.log('Participant "%s" disconnected', participant.identity);
+
+  participant.tracks.forEach(trackRemoved);
+  document.getElementById(participant.sid).remove();
+}
+
+function trackAdded(div, track) {
+  div.appendChild(track.attach());
+}
+
+function trackRemoved(track) {
+  track.detach().forEach(element => element.remove());
+}
